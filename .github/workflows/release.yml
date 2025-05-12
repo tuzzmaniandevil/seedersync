@@ -56,10 +56,20 @@ jobs:
             -tags "nobadger,nomysql,nopgx" \
             -o dist/seedersync-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.extension }} ${{ github.workspace }}
 
+      - name: Generate Release Notes
+        id: release_notes
+        uses: gableroux/generate-github-release-notes@v0.1.2
+        with:
+          repository: ${{ github.repository }}
+          base_tag: ${{ github.ref_name }}
+          head_tag: ${{ github.sha }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_detect_new_contributors: "true"
+
       - name: Upload artifact
         uses: softprops/action-gh-release@v2
         with:
+          body: ${{ steps.release_notes.outputs.notes }}
           tag_name: ${{ github.ref_name }}
           files: dist/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
