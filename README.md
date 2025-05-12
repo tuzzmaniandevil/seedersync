@@ -57,10 +57,6 @@ reannounceInterval: 5            # Interval in seconds between reannounce attemp
 | `--contributeTrackers`  | `QBIT_CONTRIBUTE_TRACKERS`  | Contribute found trackers to newtrackon.com                                 | `false`                    |
 | `--reannounceTorrents`  | `QBIT_REANNOUNCE_TORRENTS`  | Reannounce all torrents after updating trackers                             | `false`                    |
 | `--config`              | `QBIT_CONFIG_FILE`          | Path to config file (YAML, TOML, or JSON)                                   | (tries default files)      |
-| (No flag)               | (No env var)                | `staticTrackers` (in config file)                                           | (Internal static list)     |
-| (No flag)               | (No env var)                | `trackerListURLs` (in config file)                                          | (Internal URL list)        |
-| (No flag)               | (No env var)                | `reannounceMaxAttempts` (in config file)                                    | `3`                        |
-| (No flag)               | (No env var)                | `reannounceInterval` (in config file)                                       | `5` (seconds)              |
 
 *Note: The `host` is a required parameter and must be provided either via a flag, environment variable, or in the configuration file.*
 
