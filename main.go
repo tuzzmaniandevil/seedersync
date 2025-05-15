@@ -110,7 +110,7 @@ type Config struct {
 
 // loadConfigFromFile loads configuration from a file in YAML, TOML, or JSON format.
 func loadConfigFromFile(filepath string) (*Config, error) {
-	fmt.Printf("INFO: Loading configuration from file: %s", filepath)
+	fmt.Printf("INFO: Loading configuration from file: %s\n", filepath)
 
 	data, err := os.ReadFile(filepath)
 	if err != nil {
@@ -178,7 +178,7 @@ func tryDefaultConfigFiles() (*Config, bool) {
 			if err == nil {
 				return cfg, true
 			}
-			fmt.Printf("WARN: Found default config file %s but could not parse it: %v", path, err)
+			fmt.Printf("WARN: Found default config file %s but could not parse it: %v\n", path, err)
 		}
 	}
 
@@ -308,7 +308,7 @@ func defaultBoolValueOrEnv(configVal bool, envVal string, defaultVal bool) bool 
 		if err == nil {
 			return parsedVal
 		}
-		fmt.Printf("WARN: Invalid boolean value for environment variable: '%s'. Using default: %t", envVal, defaultVal)
+		fmt.Printf("WARN: Invalid boolean value for environment variable: '%s'. Using default: %t\n", envVal, defaultVal)
 	}
 	return configVal
 }
@@ -403,7 +403,7 @@ func submitTrackersToNewTrackon(trackers []string) error {
 	// We also check for 200 OK as a general success status.
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		fmt.Printf("WARN: Failed to submit trackers to newtrackon.com. Status: %s, Body: %s", resp.Status, string(bodyBytes))
+		fmt.Printf("WARN: Failed to submit trackers to newtrackon.com. Status: %s, Body: %s\n", resp.Status, string(bodyBytes))
 		// Not returning an error here as it's a non-critical part of the script's main function
 	} else {
 		fmt.Println("INFO: Successfully submitted trackers to newtrackon.com")
@@ -414,7 +414,7 @@ func submitTrackersToNewTrackon(trackers []string) error {
 
 // runApp contains the core logic of the application.
 func runApp(cfg *Config) error {
-	fmt.Printf("INFO: Connecting to qBittorrent at %s (TLS Skip Verify: %t)", cfg.Host, cfg.TLSSkipVerify)
+	fmt.Printf("INFO: Connecting to qBittorrent at %s (TLS Skip Verify: %t)\n", cfg.Host, cfg.TLSSkipVerify)
 
 	qclient := qbittorrent.NewClient(qbittorrent.Config{
 		Host:          cfg.Host,
@@ -434,19 +434,19 @@ func runApp(cfg *Config) error {
 	if err != nil {
 		return fmt.Errorf("could not get torrents from client: %w", err)
 	}
-	fmt.Printf("INFO: Found %d torrents", len(torrents))
+	fmt.Printf("INFO: Found %d torrents\n", len(torrents))
 
 	fetchedTrackers, err := getTrackerLists(cfg)
 	if err != nil {
 		return fmt.Errorf("could not get trackers list: %w", err)
 	}
-	fmt.Printf("INFO: Fetched %d unique trackers", len(*fetchedTrackers))
+	fmt.Printf("INFO: Fetched %d unique trackers\n", len(*fetchedTrackers))
 
 	if cfg.ContributeTrackers && len(*fetchedTrackers) > 0 {
 		fmt.Println("INFO: Contributing trackers to newtrackon.com.")
 		if err := submitTrackersToNewTrackon(*fetchedTrackers); err != nil {
 			// Log the error but don't stop the main script execution as it's non-critical
-			fmt.Printf("WARN: Could not submit trackers to newtrackon.com: %v", err)
+			fmt.Printf("WARN: Could not submit trackers to newtrackon.com: %v\n", err)
 		}
 	}
 
@@ -466,13 +466,13 @@ func runApp(cfg *Config) error {
 	skippedCount := 0
 	for _, torrent := range torrents {
 		if err = qclient.AddTrackers(torrent.Hash, trackerStrings); err != nil {
-			fmt.Printf("WARN: Could not update trackers for torrent %s (%s): %v", torrent.Name, torrent.Hash, err)
+			fmt.Printf("WARN: Could not update trackers for torrent %s (%s): %v\n", torrent.Name, torrent.Hash, err)
 			skippedCount++
 		} else {
 			updatedCount++
 		}
 	}
-	fmt.Printf("INFO: Finished updating trackers for existing torrents. Updated: %d, Skipped/Failed: %d", updatedCount, skippedCount)
+	fmt.Printf("INFO: Finished updating trackers for existing torrents. Updated: %d, Skipped/Failed: %d\n", updatedCount, skippedCount)
 
 	if cfg.ReannounceTorrents {
 		fmt.Println("INFO: Reannouncing all torrents.")
@@ -481,7 +481,7 @@ func runApp(cfg *Config) error {
 			MaxAttempts:     cfg.ReannounceMaxAttempts,
 			Interval:        cfg.ReannounceInterval,
 		}); err != nil {
-			fmt.Printf("WARN: Failed to reannounce all torrents: %v", err) // Non-fatal, log and continue
+			fmt.Printf("WARN: Failed to reannounce all torrents: %v\n", err) // Non-fatal, log and continue
 		} else {
 			fmt.Println("INFO: Successfully initiated reannounce for all torrents.")
 		}
