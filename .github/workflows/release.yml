@@ -10,9 +10,6 @@ jobs:
     name: Build binaries for all platforms
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     strategy:
       matrix:
         goos: [linux, windows, darwin, freebsd]
@@ -56,20 +53,54 @@ jobs:
             -tags "nobadger,nomysql,nopgx" \
             -o dist/seedersync-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.extension }} ${{ github.workspace }}
 
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.goos }}-${{ matrix.goarch }} # Artifact name, will be directory name after download
+          path: dist/seedersync-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.extension }} # Path to the single binary file
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build # Ensures this job runs only after all matrix builds in the 'build' job are complete and successful
+    permissions:
+      contents: write # Required to create a GitHub release and upload assets
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history; often beneficial for release note generation tools
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: temp_artifacts # All artifacts will be downloaded here.
+                               # Each artifact (a single file) will be placed in a subdirectory named after the artifact.
+                               # e.g., temp_artifacts/binary-linux-amd64/seedersync-linux-amd64
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release_assets
+          # Find all files within the subdirectories of temp_artifacts and copy them to release_assets
+          find temp_artifacts/ -type f -name "seedersync-*" -exec cp {} release_assets/ \;
+          echo "Assets prepared in release_assets:"
+          ls -lR release_assets
+
       - name: Generate Release Notes
         id: release_notes
         uses: gableroux/generate-github-release-notes@v0.1.2
         with:
           repository: ${{ github.repository }}
-          base_tag: ${{ github.ref_name }}
-          head_tag: ${{ github.sha }}
+          base_tag: ${{ github.ref_name }} # Note: This configuration might generate notes from the current tag to its own commit.
+          head_tag: ${{ github.sha }}     # Consider omitting base_tag and head_tag for auto-detection of previous->current tag.
           github_token: ${{ secrets.GITHUB_TOKEN }}
           auto_detect_new_contributors: "true"
 
-      - name: Upload artifact
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.release_notes.outputs.notes }}
           tag_name: ${{ github.ref_name }}
-          files: dist/*
+          files: release_assets/* # Path to all collected binaries
           token: ${{ secrets.GITHUB_TOKEN }}
